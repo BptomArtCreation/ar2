@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#13151a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <title>AR 圖像追蹤</title>
+  <link rel="stylesheet" href="styles.css" />
+  
+  <!-- 【新增】引入 A-Frame 和 AR.js 函式庫 -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ar.js@3.4.5/aframe/build/aframe-ar-nft.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <!-- 啟動畫面 (不變) -->
+    <section id="start-screen" class="screen">
+      <div class="branding">
+        <h1>AR 圖像追蹤</h1>
+        <p>點擊下方按鈕，並將鏡頭對準指定圖片</p>
+      </div>
+      <button id="btn-start" class="btn btn-primary big">
+        <span class="icon">📷</span>
+        啟動相機
+      </button>
+      <div class="tip">不會上傳影像，僅在本機處理</div>
+    </section>
+
+    <!-- 相機+疊加區 -->
+    <section id="camera-screen" class="screen hidden">
+      <!-- 【修改】這裡是新的 AR 核心 -->
+      <!-- A-Frame 場景會自動處理相機畫面，並渲染在一個 canvas 上 -->
+      <a-scene
+        id="ar-scene"
+        embedded
+        vr-mode-ui="enabled: false"
+        renderer="logarithmicDepthBuffer: true; antialias: true; precision: mediump;"
+        arjs="sourceType: webcam; debugUIEnabled: false; trackingMethod: best;">
+        
+        <!-- 
+          【重要】請將 url 換成你自己的 NFT 描述檔路徑 (不含副檔名)
+          例如：如果你的檔案在 assets/nft/my-target.fset，這裡就填 assets/nft/my-target
+        -->
+        <a-nft
+          id="nft-marker"
+          type="nft"
+          url="assets/nft/my-target" 
+          smooth="true"
+          smoothCount="10"
+          smoothTolerance="0.01"
+          smoothThreshold="5">
+          
+          <!-- 在影像平面上顯示的內容 -->
+          <!-- 尺寸單位現在是「公尺」，scale 和 position 都需要調整 -->
+          <!-- visible="true" / visible="false" 用來切換 -->
+          <a-image 
+            id="ar-image"
+            src="assets/overlay.png"
+            scale="100 100 100" 
+            rotation="-90 0 0"
+            visible="true">
+          </a-image>
+          
+          <a-video
+            id="ar-video"
+            src="#overlay-video-asset"
+            scale="100 100 100"
+            rotation="-90 0 0"
+            visible="false">
+          </a-video>
+        </a-nft>
+
+        <a-entity camera></a-entity>
+
+        <!-- 【新增】將影片資源預先定義在 a-assets 中 -->
+        <a-assets>
+            <video id="overlay-video-asset" src="assets/overlay.mp4" loop muted playsinline></video>
+        </a-assets>
+      </a-scene>
+
+      <!-- 【修改】UI 介面保持不變，但它們會疊加在 A-Frame 的 canvas 上 -->
+      <!-- 頂部工具列 -->
+      <header class="topbar">
+        <button id="btn-torch" class="btn icon-only" title="手電筒">🔦</button>
+        <div class="spacer"></div>
+        <button id="btn-switch-content" class="btn" title="切換疊加（圖/影片）">切換內容</button>
+        <button id="btn-settings" class="btn icon-only" title="設定">⚙️</button>
+      </header>
+
+      <!-- 底部即時提示 -->
+      <div id="status-tip" class="status-tip hidden">
+        <span class="dot"></span>
+        <span id="status-text">準備中...</span>
+      </div>
+
+      <!-- 底部工具列 -->
+      <footer class="bottombar">
+        <div class="bar">
+          <button id="btn-capture" class="btn btn-primary">
+            <span class="icon">⬇️</span> 截圖保存
+          </button>
+          <!-- 【移除】不再需要切換到 arjs.html 的按鈕 -->
+        </div>
+      </footer>
+    </section>
+  </div>
+
+  <!-- 【修改】 capture-canvas 仍然保留，用於截圖 -->
+  <canvas id="capture-canvas" class="hidden"></canvas>
+  <!-- 【移除】 proc-canvas 不再需要 -->
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
